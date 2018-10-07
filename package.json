@@ -2,7 +2,7 @@
   "name": "liri-bot",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "keys.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -16,5 +16,12 @@
   "bugs": {
     "url": "https://github.com/diloretodg/liri-bot/issues"
   },
-  "homepage": "https://github.com/diloretodg/liri-bot#readme"
+  "homepage": "https://github.com/diloretodg/liri-bot#readme",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "dotenv": "^6.0.0",
+    "inquirer": "^6.2.0",
+    "moment": "^2.22.2",
+    "node-spotify-api": "^1.0.7"
+  }
 }
