@@ -112,6 +112,7 @@ function spotifyThis(song){
         "Title: " + track.name + "\n" +
         "Artist: " + track.artists[0].name + "\n" +
         "Release Date: " + track.album.release_date +
+        "Spotify preview URL: " + track.preview_url + "\n" +
         "\n-----------------------\n" 
         );
         // will cycle through top 3 songs if displayed song is not correct
