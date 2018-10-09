@@ -1,15 +1,20 @@
 
-
+// required npm modules
 require("dotenv").config();
 var inquirer = require("inquirer")
 var fs = require('fs');
 var axios = require('axios');
 var Spotify = require('node-spotify-api');
 var keys = require('./keys.js');
-// var log = require('simple-node-logger').createSimpleFileLogger(filename);
+
+// API Keys stored here
 var fileLog = './log.txt';
 var omdb = keys.omdb.key;
-var omdbQuery = 'http://www.omdbapi.com/?apikey='+ omdb + '&t=';
+var bandsInTown = keys.bandsInTown.key;
+
+
+
+// Build Liri commands and allows defaulted values
 var command = process.argv[2];
 var commandParam = "";
 var defaulted = {
@@ -20,27 +25,61 @@ var defaulted = {
 }
 var commands = ["spotify-this-song", "movie-this", "concert-this", "do-what-it-says" ]
 // takes our process.argv[2] to call one of the liribot's functionality
-function liriCommand(command){
+function liriCommand(c, t){
+  // if neither are stated propts the user to select functionality
+  if(!c && !t){
+    selectFunction();
+    // if no topic specified propts the user to select topic
+  } else if (!t){
+    selectCommand(c)  
+    // if bot the command and topic are specified will run search with no prompts
+  } else {
+    switch(c){
+      case "spotify-this-song":
+      spotifyThis(t);
+      break;
+      case "movie-this":
+      movieThis(t);
+      break;
+      case "concert-this":
+      bandsInTownThis(t);
+      break;
+      case "do-what-it-says":
+      break;
+    }
+  }
+}
+
+// builds search value for multiple word values
+function buildTopic(){
+  var topicArr = process.argv;
+  for (var i = 3; i < topicArr.length; i++ ){
+    commandParam = commandParam + " " + topicArr[i];
+  }
+  console.log("Searching: " + commandParam);
+  return commandParam;
+}
+
+// called when the user needs to be prompted f0r searches
+function selectCommand(command){
   switch(command){
-    // case nothing:
-    // selectfunction();
-    // break;
     case "spotify-this-song":
-      spotifyCommand();
+    spotifyCommand();
     break;
     case "movie-this":
-      omdbCommand();
+    omdbCommand();
     break;
     case "concert-this":
-      bandsInTownCommand();
+    bandsInTownCommand();
     break;
     case "do-what-it-says":
+    doWhatItSaysCommand();
     break;
   }
 }
 
 // in case of no commands this makes you pick one
-function selectfunction(){
+function selectFunction(){
   inquirer.prompt([
     {
       type: "rawlist",
@@ -49,10 +88,11 @@ function selectfunction(){
       name: "selection",
     }
   ]).then(function(answer){
-
+    liriCommand(answer.selection)
   })
 }
 
+// Uses Spotify API to search for user requested info and comfirms the search 
 function spotifyThis(song){
   var spotify = new Spotify(keys.spotify);
   spotify.search({ type: 'track', query: song })
@@ -67,6 +107,7 @@ function spotifyThis(song){
         "Release Date: " + track.album.release_date +
         "\n-----------------------\n" 
         );
+        // will cycle through top 3 songs if displayed song is not correct
         inquirer.prompt([
           {
             name: "song",
@@ -89,6 +130,7 @@ function spotifyThis(song){
   })
 };
 
+// when prompted will inquire search parameter if ignored will display default song "Sinister Kid by Black Keys"
 function spotifyCommand(){
   inquirer.prompt([
     {
@@ -105,7 +147,9 @@ function spotifyCommand(){
   })
 }
 
+// uses OMDB API to search for user requested movie and confirms if correct one
 function movieThis(movie){
+  var omdbQuery = 'http://www.omdbapi.com/?apikey='+ omdb + '&t=';
   axios.get(omdbQuery + movie)
   .then(function (response) {
     var movieSearch = response.data;
@@ -135,7 +179,8 @@ function movieThis(movie){
     })
   })
 }
-      
+
+//when prompted will specify search parameter. if ignored the search will run for "Mr. Nobody" 
 function omdbCommand(){
   inquirer.prompt([
     {
@@ -152,8 +197,43 @@ function omdbCommand(){
   })
 }
 
-function bandsInTownCommand(){};
+// Uses Bands in Town API to search user requested info
+function bandsInTownThis(artist){
+  var bandsInTownQuery = "https://rest.bandsintown.com/artists/" + artist + "/events?app_id=" + bandsInTown;
+  axios.get(bandsInTownQuery).then(function(response){
+    for(var i = 0; i < 3; i ++){
 
+      console.log(
+        "\n-----------------------\n" +
+        "Artist: " + artist + "\n" +
+        "Venue: " + response.data[i].venue.name + "\n" +
+        "Location: " + response.data[i].venue.city + ' ,' + response.data[i].venue.region + "\n" +
+        "Date: " + response.data[i].datetime +
+        "\n-----------------------\n" 
+        );
+      }
+  })
+};
+
+// when called prompts the user for search parameter
+function bandsInTownCommand(){
+  inquirer.prompt([
+    {
+      name: "artist",
+      message:"What artist would you like to search?"
+    }
+  ]).then(function(answer){
+    if(answer.artist === ""){
+      bandsInTownThis(defaulted.artist)
+    } else {
+      commandParam = answer.artist;
+      bandsInTownThis(commandParam);
+    }
+  })
+  anythingElse();
+};
+
+// Checks if there is any thing else that should be searched for the user
 function anythingElse(){
   inquirer.prompt([
     {
@@ -165,7 +245,7 @@ function anythingElse(){
     if(answer.anything_else){
       inquirer.prompt([
         {
-          message: "What you would like me to search for you",
+          message: "What can I do for you",
           name: "new_command",
         }
       ]).then(function(answer){
@@ -175,5 +255,6 @@ function anythingElse(){
   });
 };
 
-liriCommand(command);
+buildTopic();
+liriCommand(command,commandParam);
 
