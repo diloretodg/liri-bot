@@ -23,9 +23,12 @@ var defaulted = {
   movie: "Mr. Nobody",
   task:""
 }
-var commands = ["spotify-this-song", "movie-this", "concert-this", "do-what-it-says" ]
+var commands = ["spotify-this-song", "movie-this", "concert-this", "do-what-it-says", "Never Mind" ]
+
 // takes our process.argv[2] to call one of the liribot's functionality
 function liriCommand(c, t){
+  console.log(command);
+  console.log(commandParam)
   // if neither are stated propts the user to select functionality
   if(!c && !t){
     selectFunction();
@@ -42,19 +45,20 @@ function liriCommand(c, t){
       movieThis(t);
       break;
       case "concert-this":
-      bandsInTownThis(t);
+      concertThis(t);
       break;
       case "do-what-it-says":
       break;
+
     }
   }
 }
 
 // builds search value for multiple word values
-function buildTopic(){
-  var topicArr = process.argv;
-  for (var i = 3; i < topicArr.length; i++ ){
-    commandParam = commandParam + " " + topicArr[i];
+function buildTopic(arr){
+  commandParam = "";
+  for (var i = 3; i < arr.length; i++ ){
+    commandParam = commandParam + arr[i] + " ";
   }
   console.log("Searching: " + commandParam);
   return commandParam;
@@ -75,6 +79,9 @@ function selectCommand(command){
     case "do-what-it-says":
     doWhatItSaysCommand();
     break;
+    case "Never Mind":
+    console.log("\nBye!")
+    break;
   }
 }
 
@@ -83,7 +90,7 @@ function selectFunction(){
   inquirer.prompt([
     {
       type: "rawlist",
-      message: "Please select what you would lie me to search for you",
+      message: "Please select what you would like me to search for you",
       choices: commands,
       name: "selection",
     }
@@ -198,20 +205,21 @@ function omdbCommand(){
 }
 
 // Uses Bands in Town API to search user requested info
-function bandsInTownThis(artist){
+function concertThis(artist){
   var bandsInTownQuery = "https://rest.bandsintown.com/artists/" + artist + "/events?app_id=" + bandsInTown;
   axios.get(bandsInTownQuery).then(function(response){
-    for(var i = 0; i < 3; i ++){
-
-      console.log(
-        "\n-----------------------\n" +
-        "Artist: " + artist + "\n" +
-        "Venue: " + response.data[i].venue.name + "\n" +
-        "Location: " + response.data[i].venue.city + ' ,' + response.data[i].venue.region + "\n" +
-        "Date: " + response.data[i].datetime +
-        "\n-----------------------\n" 
-        );
-      }
+    console.log(response.data)
+    for(var i = 0; i < response.data.length && i < 5; i ++){
+        console.log(
+          "\n-----------------------\n" +
+          "Artist: " + artist + "\n" +
+          "Venue: " + response.data[i].venue.name + "\n" +
+          "Location: " + response.data[i].venue.city + ' ,' + response.data[i].venue.country + "\n" +
+          "Date: " + response.data[i].datetime +
+          "\n-----------------------\n" 
+          );
+        }
+      anythingElse();
   })
 };
 
@@ -224,13 +232,12 @@ function bandsInTownCommand(){
     }
   ]).then(function(answer){
     if(answer.artist === ""){
-      bandsInTownThis(defaulted.artist)
+      concertThis(defaulted.artist)
     } else {
       commandParam = answer.artist;
-      bandsInTownThis(commandParam);
+      concertThis(commandParam);
     }
   })
-  anythingElse();
 };
 
 // Checks if there is any thing else that should be searched for the user
@@ -249,12 +256,16 @@ function anythingElse(){
           name: "new_command",
         }
       ]).then(function(answer){
-        liriCommand(answer.new_command);
+        var topic = answer.new_command.split(" ");
+        topic.unshift("0", "1")
+        command = topic[2];
+        buildTopic(topic)
+        liriCommand(command, commandParam);
       });
     };
   });
 };
 
-buildTopic();
+buildTopic(process.argv);
 liriCommand(command,commandParam);
 
