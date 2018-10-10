@@ -8,9 +8,9 @@ var Spotify = require('node-spotify-api');
 var keys = require('./keys.js');
 
 // API Keys stored here
-var fileLog = './log.txt';
 var omdb = keys.omdb.key;
-var bandsInTown = keys.bandsInTown.key;
+// var bandsInTown = keys.bandsInTown.key;
+var bandsInTown = "codingbootcamp"
 
 
 
@@ -18,8 +18,8 @@ var bandsInTown = keys.bandsInTown.key;
 var command = process.argv[2];
 var commandParam = "";
 var defaulted = {
-  song: "Sinister Kid",
-  artist: "Black Keys",
+  song: "The Sign",
+  artist: "Chris Thile",
   movie: "Mr. Nobody",
   task:""
 }
@@ -27,15 +27,16 @@ var commands = ["spotify-this-song", "movie-this", "concert-this", "do-what-it-s
 
 // takes our process.argv[2] to call one of the liribot's functionality
 function liriCommand(c, t){
-  console.log(command);
-  console.log(commandParam)
+  // if(c === "concert-this" ){
+  //   concertThis(commandParam)
+  // }
   // if neither are stated propts the user to select functionality
   if(!c && !t){
     selectFunction();
     // if no topic specified propts the user to select topic
   } else if (!t){
     selectCommand(c)  
-    // if bot the command and topic are specified will run search with no prompts
+    // if both the command and topic are specified will run search with no prompts
   } else {
     switch(c){
       case "spotify-this-song":
@@ -48,6 +49,7 @@ function liriCommand(c, t){
       concertThis(t);
       break;
       case "do-what-it-says":
+      doWhatItSays();
       break;
 
     }
@@ -77,7 +79,7 @@ function selectCommand(command){
     bandsInTownCommand();
     break;
     case "do-what-it-says":
-    doWhatItSaysCommand();
+    doWhatItSays();
     break;
     case "Never Mind":
     console.log("\nBye!")
@@ -111,7 +113,7 @@ function spotifyThis(song){
         "\n-----------------------\n" +
         "Title: " + track.name + "\n" +
         "Artist: " + track.artists[0].name + "\n" +
-        "Release Date: " + track.album.release_date +
+        "Release Date: " + track.album.release_date + "\n" +
         "Spotify preview URL: " + track.preview_url + "\n" +
         "\n-----------------------\n" 
         );
@@ -167,6 +169,9 @@ function movieThis(movie){
       "Director: " + movieSearch.Director + "\n" +
       "Actors: " + movieSearch.Actors + "\n" +
       "Rating: " + movieSearch.Rated + "\n" +
+      "IMDB Rating: " + movieSearch.Ratings[0].Value + "\n" +
+      "Rotten Tomatoes Rating: " + movieSearch.Ratings[1].Value + "\n" +
+      "Language: " + movieSearch.Language + "\n" +
       "Release Date: " + movieSearch.Released + "\n" +
       "Synopsis: " + movieSearch.Plot + 
       "\n-----------------------\n" 
@@ -207,19 +212,25 @@ function omdbCommand(){
 
 // Uses Bands in Town API to search user requested info
 function concertThis(artist){
+  console.log(commandParam)
   var bandsInTownQuery = "https://rest.bandsintown.com/artists/" + artist + "/events?app_id=" + bandsInTown;
   axios.get(bandsInTownQuery).then(function(response){
-    console.log(response.data)
-    for(var i = 0; i < response.data.length && i < 5; i ++){
+    var event = response.data;
+    if(!event[0].venue){
+      console.log("error:" + event)
+    } else {
+      console.log(event)
+      for(var i = 0; i <= event.length && i < 3; i ++){
         console.log(
           "\n-----------------------\n" +
           "Artist: " + artist + "\n" +
-          "Venue: " + response.data[i].venue.name + "\n" +
-          "Location: " + response.data[i].venue.city + ' ,' + response.data[i].venue.country + "\n" +
-          "Date: " + response.data[i].datetime +
+          "Venue: " + event[i].venue.name + "\n" +
+          "Location: " + event[i].venue.city + ', ' + event[i].venue.country + "\n" +
+          "Date: " + event[i].datetime +
           "\n-----------------------\n" 
           );
         }
+      }
       anythingElse();
   })
 };
@@ -232,11 +243,25 @@ function bandsInTownCommand(){
       message:"What artist would you like to search?"
     }
   ]).then(function(answer){
-    if(answer.artist === ""){
-      concertThis(defaulted.artist)
+    if(!answer.artist){
+      commandParam = defaulted.artist
+      concertThis(commandParam)
     } else {
       commandParam = answer.artist;
       concertThis(commandParam);
+    }
+  })
+};
+
+function doWhatItSays(){
+  fs.readFile("random.txt", "utf8", (err, data) => {
+    if (err) {
+      console.log(err);
+    } else {
+      var randomTxtArr = data.split(",");
+      command = randomTxtArr[0]
+      commandParam = randomTxtArr[1];
+      liriCommand(command, commandParam);
     }
   })
 };
