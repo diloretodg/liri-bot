@@ -1,6 +1,6 @@
 # liri-bot
 
- [Watch a demo of the app](assets/liri-demo.webm)
+ [Watch a demo of the app](https://drive.google.com/file/d/17YAub8tXr52qZ-NukLudFdfxE4NY-wCq/view?usp=sharing"Liri-bot Demo")
 
 This Node.js app takes user input to search several API for requested info.
 
