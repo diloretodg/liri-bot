@@ -113,6 +113,7 @@ function spotifyThis(song){
         "\n-----------------------\n" +
         "Title: " + track.name + "\n" +
         "Artist: " + track.artists[0].name + "\n" +
+        "Album: " + track.album.name + "\n" +
         "Release Date: " + track.album.release_date + "\n" +
         "Spotify preview URL: " + track.preview_url + "\n" +
         "\n-----------------------\n" 
@@ -212,14 +213,12 @@ function omdbCommand(){
 
 // Uses Bands in Town API to search user requested info
 function concertThis(artist){
-  console.log(commandParam)
   var bandsInTownQuery = "https://rest.bandsintown.com/artists/" + artist + "/events?app_id=" + bandsInTown;
   axios.get(bandsInTownQuery).then(function(response){
     var event = response.data;
     if(!event[0].venue){
       console.log("error:" + event)
     } else {
-      console.log(event)
       for(var i = 0; i <= event.length && i < 3; i ++){
         console.log(
           "\n-----------------------\n" +
