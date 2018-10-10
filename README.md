@@ -1,5 +1,7 @@
 # liri-bot
 
+ [Watch a demo of the app](assets/liri-demo.webm)
+
 This Node.js app takes user input to search several API for requested info.
 
 APIs used:
