@@ -51,7 +51,6 @@ function liriCommand(c, t){
       case "do-what-it-says":
       doWhatItSays();
       break;
-
     }
   }
 }
@@ -60,8 +59,10 @@ function liriCommand(c, t){
 function buildTopic(arr){
   commandParam = "";
   for (var i = 3; i < arr.length; i++ ){
-    commandParam = commandParam + arr[i] + " ";
+    commandParam = commansdParam + arr[i] + " ";
   }
+  // trims to keep excess spaces from messing up bands in town API and making me cry from frustration
+  commandParam = commandParam.trim();
   console.log("Searching: " + commandParam);
   return commandParam;
 }
@@ -291,6 +292,7 @@ function anythingElse(){
   });
 };
 
+
 buildTopic(process.argv);
-liriCommand(command,commandParam);
+liriCommand(command, commandParam);
 
